@@ -1,0 +1,24 @@
+{
+  "name": "minerva",
+  "version": "0.0.0",
+  "description": "Password and Account Manager",
+  "main": "entry.js",
+  "scripts": {
+    "test": "electron entry.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DAC098/Minerva.git"
+  },
+  "keywords": [
+    "password",
+    "accounts",
+    "manager"
+  ],
+  "author": "David Cathers",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DAC098/Minerva/issues"
+  },
+  "homepage": "https://github.com/DAC098/Minerva#readme"
+}
