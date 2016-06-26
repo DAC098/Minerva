@@ -1,15 +1,29 @@
+const util = require('util');
+
 const electron = require('electron');
 // Module to control application life.
 const {app} = electron;
 // Module to create native browser window.
 const {BrowserWindow} = electron;
 
+const ProfileMan = require('./lib/ProfileMan.js').ProMan;
+const pm_events = require('./lib/ProfileMan.js').events;
+console.log(`pm_events: ${util.inspect(pm_events,{depth: null})}`);
+
+const manager = new ProfileMan();
+
+manager.loadManager();
+
+manager.on(pm_events.pro_loaded,() => {
+    console.log("ProfileMan loaded");
+    manager.createProfile("dac098","tds");
+});
+
+console.log(`manager: ${util.inspect(manager,{depth: null})}`);
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
-
-console.log(`process env:`,process.env,"\n");
-console.log(`process platform: ${process.platform}\n`);
 
 function createWindow() {
     // Create the browser window.
