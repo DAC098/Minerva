@@ -6,20 +6,17 @@ const {app} = electron;
 // Module to create native browser window.
 const {BrowserWindow} = electron;
 
-const ProfileMan = require('./lib/ProfileMan.js').ProMan;
-const pm_events = require('./lib/ProfileMan.js').events;
-console.log(`pm_events: ${util.inspect(pm_events,{depth: null})}`);
+require('./lib/ProtoExtend.js');
 
-const manager = new ProfileMan();
+const manager = require('./lib/ProfileMan.js');
 
-manager.loadManager();
+const IPCEvents = require('./lib/ipcMain_events.js');
 
-manager.on(pm_events.pro_loaded,() => {
+manager.on('manager-loaded',() => {
     console.log("ProfileMan loaded");
-    manager.createProfile("dac098","tds");
 });
 
-console.log(`manager: ${util.inspect(manager,{depth: null})}`);
+manager.loadManager();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -31,6 +28,8 @@ function createWindow() {
 
     // and load the index.html of the app.
     win.loadURL(`file://`+__dirname+`/gui/main.html`);
+
+    IPCEvents(manager);
 
     // Open the DevTools.
     win.webContents.openDevTools();
@@ -47,7 +46,10 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+    console.log('app ready');
+    createWindow();
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {

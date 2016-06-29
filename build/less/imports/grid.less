@@ -1,0 +1,25 @@
+.generate-columns(@c,@i:1) when (@i =< @c) {
+    .col-@{i} {
+        position: relative;
+        display: table-cell;
+        width: (@i * 100% / @c);
+    }
+
+    .generate-columns(@c,@i + 1);
+}
+
+.grid {
+    position: relative;
+    display: table;
+    width: 100%;
+
+    &.parent-h {
+        height: 100%;
+    }
+    .generate-columns(12);
+
+    & .row {
+        display: table-row;
+        width: 100%;
+    }
+}
