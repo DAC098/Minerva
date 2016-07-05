@@ -32,7 +32,11 @@ const SideBar = React.createClass({
         });
     },
     requestGroup: function (group_name) {
+        console.log(`requesting group: ${ group_name }`);
         ipcRenderer.send('request-group', group_name);
+    },
+    requestAll: function () {
+        ipcRenderer.send('request-group', "all");
     },
     renderGroups: function () {
         return this.state.groups.map(value => {

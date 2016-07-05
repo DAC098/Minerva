@@ -5,11 +5,14 @@ const {ipcRenderer} = require('electron');
 const AccountList = React.createClass({
     getInitialState: function() {
         return {
-            list: ipcRenderer.sendSync('request-all');
+            list: ipcRenderer.sendSync('request-all'),
         }
     },
     componentDidMount:function() {
         ipcRenderer.on('list-update',this.setList);
+    },
+    componentWillUnmount: function() {
+        ipcRenderer.removeAllListeners('list-update');
     },
     setList: function(event,new_list) {
         this.setState({
@@ -17,7 +20,7 @@ const AccountList = React.createClass({
         });
     },
     viewAccount: function(account) {
-
+        this.props.viewAccount(account)
     },
     renderList: function() {
         return this.state.list.map((value) => {
@@ -38,4 +41,6 @@ const AccountList = React.createClass({
             </section>
         );
     }
-})
+});
+
+module.exports = AccountList;
