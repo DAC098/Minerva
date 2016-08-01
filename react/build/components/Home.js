@@ -1,6 +1,9 @@
 const React = require('react');
 const {ipcRenderer} = require('electron');
 
+const GroupContainer = require('../containers/GroupContainer.js');
+const AccountListContainer = require('../containers/AccountListContainer.js');
+
 const SideBar = require('./SideBar.js');
 const AccountList = require('./AccountList.js');
 const AccountMan = require('./AccountMan.js');
@@ -8,47 +11,22 @@ const AccountMan = require('./AccountMan.js');
 const Home = React.createClass({
     getInitialState: function() {
         return {
-            viewing_list: true,
-            account_holder: {
-                acc_name: "",
-                username: "",
-                password: "",
-                fields: [],
-            },
+            form_active: false,
+            new_account: false,
+            edit_account: false,
         }
     },
     componentDidMount: function() {
         ipcRenderer.once('logout-successful',this.processLogout);
-        ipcRenderer.on('view-list',this.viewAccountList);
     },
     saveProfile: function() {
         ipcRenderer.send('save-profile');
     },
-    newAccount: function() {
-        this.viewAccountMan({
-            acc_name: "",
-            username: "",
-            password: "",
-            email: "",
-            fields: [],
-        });
-    },
-    viewAccountMan: function(account) {
+    viewAccountMan: function(view_form,new_account,edit_account) {
         this.setState({
-            viewing_list: false,
-            account_holder: account
-        });
-    },
-    viewAccountList: function() {
-        this.setState({
-            viewing_list: true,
-            account_holder: {
-                acc_name: "",
-                username: "",
-                password: "",
-                email: "",
-                fields: [],
-            }
+            form_active: view_form,
+            new_account: new_account,
+            edit_account: edit_account
         });
     },
     handleLogout: function() {
@@ -59,7 +37,7 @@ const Home = React.createClass({
     },
 
     render: function() {
-        console.log(`viewing_list: ${this.state.viewing_list}`);
+        console.log('home state:',this.state);
         return (
             <div>
                 <header className="grid">
@@ -70,15 +48,16 @@ const Home = React.createClass({
                         <h4>Minerva</h4>
                     </section>
                     <section className="col-4">
-                        <input onClick={this.newAccount} type="button" value="New Account" />
+                        <input onClick={this.viewAccountMan.bind(this,true,true,true)} type="button" value="New Account" />
                         <input onClick={this.saveProfile} type="button" value="Save" />
                         <input onClick={this.handleLogout} type="button" value="Logout" />
                     </section>
                 </header>
                 <main className="grid">
-                    <SideBar />
+                    <GroupContainer />
                     <section className="col-9">
-                        { this.state.viewing_list ? <AccountList viewAccount={this.viewAccountMan} /> : <AccountMan closeEditor={this.viewAccountList} new_account={this.state.account_holder.acc_name === ""} account={this.state.account_holder} />}
+                        <AccountListContainer viewAccountMan={this.viewAccountMan} />
+                        <AccountMan viewAccountMan={this.viewAccountMan} active={this.state.form_active} new_account={this.state.new_account} editing={this.state.edit_account} />
                     </section>
                 </main>
             </div>

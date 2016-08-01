@@ -16,23 +16,19 @@ const Login = React.createClass({
     disableEvent: function(event) {
         event.preventDefault();
     },
-    updateUsername: function(event) {
+    updateInput: function(key,event) {
         const value = findDOMNode(event.target).value;
-        this.setState({
-            username: value
-        });
-    },
-    updatePassword: function(event) {
-        const value= findDOMNode(event.target).value;
-        this.setState({
-            password: value
-        });
+        var obj = {};
+        obj[key] = this.state[key];
+        obj[key] = value;
+        this.setState(obj);
     },
     requestLogin: function(event) {
+        console.log('user data:',this.state);
         ipcRenderer.send("login-request",this.state.username,this.state.password);
     },
     createAccount: function() {
-        ipcRenderer.send("create-account-request",this.state.username,this.state.password);
+        ipcRenderer.send("create-account",this.state.username,this.state.password);
     },
     processLogin: function(event,result) {
         if(result) {
@@ -53,8 +49,8 @@ const Login = React.createClass({
         return (
             <section>
                 <form onSubmit={this.disableEvent}>
-                    <input onChange={this.updateUsername} type="text" placeholder="Username" value={this.username} />
-                    <input onChange={this.updatePassword} type="password" placeholder="Password" value={this.password} />
+                    <input onChange={this.updateInput.bind(this,'username')} type="text" placeholder="Username" value={this.state.username} />
+                    <input onChange={this.updateInput.bind(this,'password')} type="password" placeholder="Password" value={this.state.password} />
                     <input onClick={this.requestLogin} type="button" value="Login" />
                     <input onClick={this.createAccount} type="button" value="Create" />
                 </form>

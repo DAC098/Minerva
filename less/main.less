@@ -23,3 +23,17 @@ main {
     height: ~"calc(100vh - 64px)";
     background-color: @color-gray500;
 }
+
+#manager-form {
+    position: fixed;
+    right: 100%;
+    width: inherit;
+
+    &.active {
+        right: auto;
+    }
+}
+
+.hidden {
+    display: none;
+}

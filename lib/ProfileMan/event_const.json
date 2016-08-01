@@ -1,0 +1,30 @@
+{
+    "manager": {
+        "loaded": "manager-loaded",
+        "saved": "manager-saved",
+        "error": "manager-error",
+    },
+    "profile": {
+        "updated": "profile-updated",
+        "added": "profile-added",
+        "removed": "profile-removed",
+        "error": "profile-error",
+    },
+    "group": {
+        "updated": "group-updated",
+        "added": "group-added",
+        "removed": "group-removed",
+        "edited": "group-edited",
+        "error": "group-error",
+    },
+    "account": {
+        "updated": "account-updated",
+        "added": "account-added",
+        "removed": "account-removed",
+        "error": "account-error",
+    },
+    "email": {
+        "added": "email-added",
+        "removed": "email-removed",
+    }
+}

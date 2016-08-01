@@ -1,48 +1,78 @@
-const gulp = require('gulp');
-const babel = require('gulp-babel');
-const less = require('gulp-less');
-const gutil = require('gulp-util');
-const plumber = require('gulp-plumber');
+// node modules
 const path = require('path');
 
+// npm modules
+const gulp = require('gulp');
+const pump = require('pump');
+
+// gulp modules
+const babel = require('gulp-babel');
+const gutil = require('gulp-util');
+const less = require('gulp-less');
+const watch = require('gulp-watch');
+
 const paths = {
-    jsx: "./build/react/**/*.js",
-    less: ["./build/less/main.less",'./build/less/**/*.less'],
+    react: {
+        src: './react/build/**/*.js',
+        out: './resources/reactjs'
+    },
+    less: {
+        src: './less/main.less',
+        out: './resources/style',
+        imp: './less/imports/**/*.less'
+    }
+}
+
+function logStream(err,name) {
+    if(err) {
+        gutil.log(gutil.colors.red('ERROR stream:'),name);
+        gutil.log(err.message);
+        gutil.log(err.stack);
+    } else {
+        gutil.log(gutil.colors.green('completed stream:'),name);
+    }
+}
+
+function buildReact() {
+    gutil.log('starting stream: react');
+    pump([
+        gulp.src(paths.react.src),
+        babel({
+            presets: ['react']
+        }),
+        gulp.dest(paths.react.out)
+    ],(err) => {
+        logStream(err,'react');
+    });
+}
+
+function buildLess() {
+    gutil.log('starting steam: less');
+    pump([
+        gulp.src(paths.less.src),
+        less({
+            paths: paths.less.imp
+        }),
+        gulp.dest(paths.less.out)
+    ],(err) => {
+        logStream(err,'less');
+    });
 }
 
 gulp.task('build-react',() => {
-    return gulp.src(paths.jsx)
-        .pipe(plumber({
-            errorHandler:(err) => {
-                gutil.log(gutil.colors.red("ERROR in jsx file"));
-                gutil.log(err.message,"\n",err.codeFrame);
-            }
-        }))
-        .pipe(babel({
-            presets: ['react']
-        }))
-        .pipe(plumber.stop())
-        .pipe(gulp.dest('./gui'))
+    buildReact();
 });
 
 gulp.task('build-less',() => {
-    return gulp.src(paths.less[0])
-        .pipe(plumber({
-            errorHandler:(err) => {
-                gutil.log(gutil.colors.red("ERROR in less file"));
-                gutil.log(err.message,"\n",err.codeFrame);
-            }
-        }))
-        .pipe(less({
-            paths:[path.join(__dirname,'build','less','imports')]
-        }))
-        .pipe(plumber.stop())
-        .pipe(gulp.dest('./gui'));
+    buildLess();
 });
 
-gulp.task('watch',() => {
-    gulp.watch(paths.jsx,['build-react']);
-    gulp.watch(paths.less,['build-less']);
+gulp.task('watch-react',() => {
+    return watch(paths.react.src,() => buildReact());
 });
 
-gulp.task('default',['watch','build-react','build-less']);
+gulp.task('watch-less',() => {
+    return watch([paths.less.src,paths.less.imp],() => buildLess());
+})
+
+gulp.task('default',['build-react','build-less','watch-react','watch-less']);

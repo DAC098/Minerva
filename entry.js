@@ -8,12 +8,12 @@ const {BrowserWindow} = electron;
 
 require('./lib/ProtoExtend.js');
 
-const manager = require('./lib/ProfileMan.js');
+const manager = require('./lib/ProfileMan/index.js');
 
 const IPCEvents = require('./lib/ipcMain_events.js');
 
 manager.on('manager-loaded',() => {
-    console.log("ProfileMan loaded");
+    console.log("\n-----ProfileMan loaded-----\n");
 });
 
 manager.loadManager();
@@ -23,13 +23,14 @@ manager.loadManager();
 let win;
 
 function createWindow() {
+    console.log('\ncreating main window\n');
     // Create the browser window.
     win = new BrowserWindow({width: 800, height: 600});
 
     // and load the index.html of the app.
-    win.loadURL(`file://`+__dirname+`/gui/main.html`);
+    win.loadURL(`file://`+__dirname+`/resources/main.html`);
 
-    IPCEvents(manager);
+    IPCEvents(manager,win.webContents);
 
     // Open the DevTools.
     win.webContents.openDevTools();
@@ -47,7 +48,7 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-    console.log('app ready');
+    console.log('\n-----app ready-----\n');
     createWindow();
 });
 
