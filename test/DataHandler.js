@@ -5,17 +5,32 @@ const DataHandler = require('../lib/ProfileMan/DataHandler.js');
 const handler = new DataHandler(true);
 
 function makeAccount(pk,name,username,password,is_email,email,fields) {
-    return {
+    var rtn = {
         pk,
-        data: {
-            name,
-            username,
-            password,
-            is_email,
-            email,
-            fields
-        }
+        data: {}
+    };
+    if(pk){
+        rtn.pk = pk;
     }
+    if(name) {
+        rtn.data['name'] = name;
+    }
+    if(username) {
+        rtn.data['username'] = username;
+    }
+    if(password) {
+        rtn.data['password'] = password;
+    }
+    if(typeof is_email === 'boolean') {
+        rtn.data['is_email'] = is_email;
+    }
+    if(email) {
+        rtn.data['email'] = email;
+    }
+    if(fields) {
+        rtn.data['fields'] = fields;
+    }
+    return rtn;
 };
 
 describe('handler',function(){
@@ -40,7 +55,7 @@ describe('handler',function(){
 
     const accou_one = makeAccount('1','thing','dude1','123',true,'dude1@me.com',[]);
 
-    const accou_two = makeAccount('2','other','dude1','1234',false,'thing',[]);
+    const accou_two = makeAccount('2','other','dude1','1234',false,'thing');
 
     const accou_three = makeAccount('3','stuff','dude1','12345',true,'dude1@dac.com',[]);
 
@@ -116,9 +131,28 @@ describe('handler',function(){
             it('inserts a new account and returns the pk of the new account',function(){
                 assert.strictEqual(handler.account.insert(accou_one.data),accou_one.pk);
             });
-        })
 
-    })
+            it('fails if there is an unknown key passed it',function(){
+                assert(!handler.account.insert({thing:'other',stuff:'cool',is_email:true}));
+            });
+
+            it('fills in missing keys if the data passed validation',function(){
+                assert.strictEqual(handler.account.insert(accou_two.data),accou_two.pk);
+            });
+
+            it('sends an event from account with the new pk added',function(done){
+                handler.on('event',(ref,type,data) => {
+                    if(ref === 'account' && type === 'insert') {
+                        assert.strictEqual(data,accou_three.pk);
+                        handler.removeAllListeners('event');
+                        done();
+                    }
+                });
+                handler.account.insert(accou_three.data);
+            });
+        });
+
+    });
 
 
     describe('#group',function(){
@@ -195,7 +229,9 @@ describe('handler',function(){
         });
 
         describe('#addto',function(){
+            it('adds accounts to a specified group',function(){
 
+            })
         });
     });
 });
