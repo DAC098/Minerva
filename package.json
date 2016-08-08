@@ -7,6 +7,9 @@
     "start": "./node_modules/.bin/electron entry.js",
     "build": "gulp build-react build-less",
     "test": "./node_modules/.bin/mocha",
+    "build-mongo-config": "node ./mongodb/make_config.js",
+    "start-mongod": "node ./lib/mongodEXE.js run_db",
+    "start-mongo": "mongodb\\bin\\mongo.exe minerva",
     "b-watch": "gulp"
   },
   "repository": {
@@ -29,6 +32,7 @@
     "classnames": "^2.2.5",
     "electron-prebuilt": "^1.2.7",
     "less": "^2.7.1",
+    "mongodb": "^2.2.5",
     "pump": "^1.0.1",
     "react": "^15.1.0",
     "react-dom": "^15.1.0"

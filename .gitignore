@@ -3,4 +3,7 @@ node_modules
 resources/reactjs
 resources/style
 
+mongodb/local
+mongodb/logs
+
 npm-debug.log
