@@ -7,8 +7,7 @@
     "start": "./node_modules/.bin/electron entry.js",
     "build": "gulp build-react build-less",
     "test": "./node_modules/.bin/mocha",
-    "build-mongo-config": "node ./mongodb/make_config.js",
-    "start-mongod": "node ./lib/mongodEXE.js run_db",
+    "start-mongod": "node ./lib/db/mongodEXE.js run_db",
     "start-mongo": "mongodb\\bin\\mongo.exe minerva",
     "b-watch": "gulp"
   },
