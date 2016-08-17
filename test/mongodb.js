@@ -1,6 +1,17 @@
 const assert = require('assert');
+const util = require('util');
+const co = require('co');
+const chai = require('chai');
+const chaiPromise = require('chai-as-promised');
 
-const DBMinerva = require('../lib/db/index.js');
+const expect = chai.expect;
+const should = chai.should();
+
+chai.use(chaiPromise);
+
+const DBMinerva = require('../lib/db/DBMinerva.js');
+
+const CryptKeeper = require('../lib/CryptKeeper.js');
 
 const logging = require('../lib/log.js');
 
@@ -8,416 +19,329 @@ const settings = require('../settings.json');
 
 const logger = logging.logger('mocha');
 
-const db = new DBMinerva(`${settings.local.ip}:${settings.local.port}`,{debug: true});
+const db = new DBMinerva();
 
-db.on('db',(type,data) => {
-    if(type === 'ready') {
-        describe('#db',function(){
-
-            describe('#profiles',function(){
-                describe('#insert',function(){
-                    it('inserts a new document with a name and password',function(done){
-                        logger('running test for profiles.insert');
-                        db.on('profiles',(type,data) => {
-                            if(type === 'insert') {
-                                db.profiles.find({_id: data});
-                            }
-                            if(type === 'find') {
-                                assert(data);
-                                assert.equal(data.username,'dac');
-                                db.removeAllListeners('profiles');
-                                done();
-                            }
-                        });
-                        db.profiles.insert('dac','tds');
-                    });
-                });
-
-                describe('#find',function(){
-                    it('finds the desired document with a query',function(done){
-                        logger('running test for profiles.find');
-                        db.on('profiles',(type,data) => {
-                            if(type === 'find') {
-                                assert(data);
-                                assert.equal(data.username,'dac');
-                                db.removeAllListeners('profiles');
-                                done();
-                            }
-                        });
-                        db.profiles.find({username:'dac'});
-                    });
-                });
-
-                describe('#update',function(){
-                    it('updates the specified document with new data',function(done){
-                        logger('running test for profiles.update');
-                        db.on('profiles',(type,data) => {
-                            if(type === 'update') {
-                                db.profiles.find({_id: data});
-                            }
-                            if(type === 'find') {
-                                assert(data);
-                                assert.equal(data.username,'cad');
-                                db.removeAllListeners('profiles');
-                                done()
-                            }
-                        });
-                        db.profiles.update({username: 'dac'},{username: 'cad'});
-                    });
-                });
-
-                describe('#remove',function(){
-                    it('removes the specified document and returns the id of the document removed',function(done){
-                        logger('running test for profiles.remove');
-                        db.on('profiles',(type,data) => {
-                            if(type === 'remove') {
-                                assert(data);
-                                db.profiles.find({username: 'cad'});
-                            }
-                            if(type === 'find') {
-                                assert(!data);
-                                db.removeAllListeners('profiles');
-                                done();
-                            }
-                        });
-                        db.profiles.remove({username: 'cad'});
-                    });
-                });
-            });
-
-            describe('#connectProfile',function(){
-                it('connects a user to their db',function(done){
-                    db.on('db',(type,data) => {
-                        if(type === 'profile-ready') {
-                            db.removeAllListeners('db');
-                            done();
-                        }
-                    });
-                    db.on('profiles',(type,data) => {
-                        if(type === 'insert') {
-                            db.connectProfile('dac');
-                            db.removeAllListeners('profiles');
-                        }
-                    });
-                    db.profiles.insert('dac','tds');
-                });
-            });
-
-            describe('#groups',function(){
-
-                describe('#insert',function(){
-                    it('inserts a new account with the given data',function(done){
-                        logger('running test for groups.insert');
-
-                        db.on('groups',(type,data) => {
-                            if(type === 'insert') {
-                                db.groups.findOne({_id: data});
-                            }
-                            if(type === 'findOne') {
-                                assert(data);
-                                assert.equal(data.name,'cool');
-                                db.removeAllListeners('groups');
-                                done();
-                            }
-                        });
-                        db.groups.insert('cool');
-                    });
-                });
-
-                describe('#findOne',function() {
-                    it('returns a single group based on a query',function(){
-                        logger('running test for groups.findOne');
-                        db.on('groups',(type,data) => {
-                            if(type === 'findOne') {
-                                assert(!(data instanceof Array));
-                                assert.equal(data.name,'cool');
-                                db.removeAllListeners('groups');
-                                done();
-                            }
-                        });
-                        db.groups.findOne({name: 'cool'});
-                    });
-                });
-
-                describe('#find',function(){
-                    it('returns all groups based on a query',function(done){
-                        logger('running test for groups.find');
-                        db.on('groups',(type,data) => {
-                            if(type === 'find') {
-                                assert(data.length);
-                                assert.equal(data[0].name,'cool');
-                                db.removeAllListeners('groups');
-                                done();
-                            }
-                        });
-                        db.groups.find({name: 'cool'});
-                    });
-                });
-
-                describe('#update',function(){
-                    it('updates the specified group with new data',function(done){
-                        logger('running test for groups.update');
-                        db.on('groups',(type,data) => {
-                            if(type === 'update') {
-                                db.groups.findOne({_id: data});
-                            }
-                            if(type === 'findOne') {
-                                assert(data);
-                                assert.equal(data.name,'Cool stuff');
-                                db.removeAllListeners('groups');
-                                done();
-                            }
-                        });
-                        db.groups.update({name: 'cool'},{name: 'Cool stuff'});
-                    });
-                });
-
-                describe('#remove',function(){
-                    it('removes the specified group based on a query',function(done){
-                        logger('running test for groups.remove');
-                        db.on('groups',(type,data) => {
-                            if(type === 'remove') {
-                                db.groups.findOne({_id: data});
-                            }
-                            if(type === 'findOne') {
-                                assert(!data);
-                                db.removeAllListeners('groups');
-                                done();
-                            }
-                        });
-                        db.groups.remove({name: 'Cool stuff'});
-                    });
-                })
-            });
-
-            const yahoo = {
-                name:'yahoo',
-                username: 'dac',
-                password: 'tds',
-                is_email: true,
-                email: 'dac@yahoo.com'
-            };
-
-            const bad = {
-                dude: 'other',
-                name: 'thing',
-                username: 'dac',
-                is_email: 'nope',
-                email: false
-            };
-
-            const google = {
-                name: 'google',
-                username: 'dac',
-                password: 'tds',
-                is_email: true,
-                email: 'dac@gmail.com',
-                group: {
-                    _id: '2',
-                    name: 'main'
-                }
+function checkConnection(done) {
+    return co(function* () {
+        var connections = db.connections();
+        if(!connections.main) {
+            var check = yield db.connect(`${settings.local.ip}:${settings.local.port}`);
+            if(check) {
+                return yield db.initMain();
+            } else {
+                return Promise.resolve(false);
             }
+        }
+        return yield Promise.resolve(true);
+    }).then((val) => {
+        if(val) done();
+        else done(val);
+    });
+}
 
-            const autocad = {
-                name: 'autocad',
-                username: 'dac',
-                password: 'tds',
-                is_email: false,
-                email: 'google',
-                group: {
-                    _id: '2',
-                    name: 'main'
-                },
-                fields: []
-            };
+const yahoo = {
+    name:'yahoo',
+    username: 'dac',
+    password: 'tds',
+    is_email: true,
+    email: 'dac@yahoo.com'
+};
 
-            const cool = {
-                _id: '3',
-                name: 'Cool'
-            };
+const bad = {
+    dude: 'other',
+    name: 'thing',
+    username: 'dac',
+    is_email: 'nope',
+    email: false
+};
 
-            describe('#accounts',function(){
-                describe('#insert',function(){
-                    it('inserts new account data to the db',function(done){
-                        logger('running test for accounts.insert');
-                        db.on('accounts',(type,data) => {
-                            if(type === 'insert') {
-                                db.accounts.findOne({_id: data});
-                            }
-                            if(type === 'findOne') {
-                                assert(data);
-                                assert.equal(data.name,yahoo.name);
-                                assert.equal(data.username,yahoo.username);
-                                assert(data.is_email);
-                                assert.equal(data.email,yahoo.email);
-                                db.removeAllListeners('accounts');
-                                done();
-                            }
-                        });
-                        db.accounts.insert(yahoo);
-                    });
+const google = {
+    name: 'google',
+    username: 'dac',
+    password: 'tds',
+    is_email: true,
+    email: 'dac@gmail.com',
+    group: ['main']
+}
 
-                    it('fails if the required fields are not valid',function(done){
-                        logger('running test for accounts.insert');
-                        db.on('accounts',(type,data) => {
-                            if(type === 'error') {
-                                assert.equal(data.code,121);
-                                db.removeAllListeners('accounts');
-                                done();
-                            }
-                        });
-                        db.accounts.insert(bad);
-                    });
+const autocad = {
+    name: 'autocad',
+    username: 'dac',
+    password: 'tds',
+    is_email: false,
+    email: 'google',
+    group: ['main'],
+    fields: []
+};
 
-                    it('set a new account to a group if given',function(done){
-                        logger('running test for accounts.insert');
-                        db.on('groups',(type,data) => {
-                            if(type === 'insert') {
-                                db.accounts.insert(google);
-                            }
-                        });
-                        db.on('accounts',(type,data) => {
-                            if(type === 'insert') {
-                                db.accounts.findOne({_id: data});
-                            }
-                            if(type === 'findOne') {
-                                assert(data);
-                                assert.equal(data.group.name,google.group.name);
-                                assert.equal(data.group._id,google.group._id);
-                                db.removeAllListeners('accounts');
-                                db.removeAllListeners('groups');
-                                done();
-                            }
-                        });
-                        db.groups.insert(google.group.name);
-                    });
-                });
+const user1 = {
+    username: 'phil',
+    password: 'tds',
+    salt: CryptKeeper.getSalt(),
+    ref: '10'
+}
 
-                describe('#findOne',function(){
-                    it('finds an account based on the desired query',function(done){
-                        logger('running test for accounts.findOne');
-                        db.on('accounts',(type,data) => {
-                            if(type === 'findOne') {
-                                assert(data);
-                                assert.equal(data.name,google.name);
-                                assert.equal(data.username,google.username);
-                                db.removeAllListeners('accounts');
-                                done();
-                            }
-                        });
-                        db.accounts.findOne({name: google.name});
-                    });
-                });
+const user2 = {
+    username: 'steve',
+    password: 'heo',
+    salt: '',
+    ref: '',
+}
 
-                describe('#find',function(){
-                    it('returns an array of all the documents found from a query',function(done) {
-                        logger('running test for accounts.find');
-                        db.on('accounts',(type,data) => {
-                            if(type === 'insert') {
-                                db.accounts.find({'group.name':google.group.name});
-                            }
-                            if(type === 'find') {
-                                assert(data);
-                                assert.equal(data.length,2);
-                                db.removeAllListeners('accounts');
-                                done();
-                            }
-                        });
-                        db.accounts.insert(autocad);
-                    });
-                });
+const user3 = {
+    username: 'mike',
+    password: 'dude',
+    salt: '',
+    ref: '',
+}
 
-                describe('#updateOne',function(){
-                    it('updates a single account based on a query with the given data',function(done){
-                        logger('running test for accounts.updateOne');
-                        db.on('accounts',(type,data) => {
-                            if(type === 'updateOne') {
-                                db.accounts.findOne({_id: data});
-                            }
-                            if(type === 'findOne') {
-                                assert(data);
-                                assert.equal(data.name,'Google');
-                                db.removeAllListeners('accounts');
-                                done();
-                            }
-                        });
-                        db.accounts.updateOne({name: google.name},{name: 'Google'});
-                    });
-                });
+const user1dup = {
+    username: 'phil',
+    password: 'tds',
+    salt: CryptKeeper.getSalt(),
+    ref: ''
+}
 
-                describe('#update',function(){
-                    it('updates many accounts based on a query and gives them new data',function(done){
-                        logger('running test for accounts.update');
-                        db.on('groups',(type,data) => {
-                            if(type === 'insert') {
-                                db.groups.findOne({_id: data});
-                            }
-                            if(type === 'findOne') {
-                                assert(data);
-                                assert.deepEqual(data,cool);
-                                db.accounts.update({'group.name':'main'},{group: data});
-                            }
-                        });
-                        db.on('accounts',(type,data) => {
-                            if(type === 'update') {
-                                assert.equal(data,2);
-                                db.accounts.find({'group.name':cool.name});
-                            }
-                            if(type === 'find') {
-                                assert(data);
-                                assert.equal(data.length,2);
-                                db.removeAllListeners('accounts');
-                                db.removeAllListeners('groups');
-                                done();
-                            }
-                            if(type === 'error') {
-                                console.log(data);
-                            }
-                        });
-                        db.groups.insert(cool.name);
-                    });
-                });
+describe('#db',function(){
 
-                describe('#removeOne',function(){
-                    it('removes a single account based on a query',function(done){
-                        logger('running test for accounts.removeOne');
-                        db.on('accounts',(type,data) => {
-                            if(type === 'removeOne') {
-                                assert(data);
-                                db.accounts.findOne({_id:data});
-                            }
-                            if(type === 'findOne') {
-                                assert(!data);
-                                db.removeAllListeners('accounts');
-                                done();
-                            }
-                        });
-                        db.accounts.removeOne({name: yahoo.name});
-                    });
-                });
+    describe('#connect',function() {
+        it('connects to the desired database',function() {
+            return expect(co(function* () {
+                return yield db.connect(`${settings.local.ip}:${settings.local.port}`)
+            })).to.eventually.be.true;
+        });
 
-                describe('#remove',function(){
-                    it('removes any account that matches the given query',function(done){
-                        logger('running test for accounts.remove');
-                        db.on('accounts',(type,data) => {
-                            if(type === 'remove') {
-                                assert.equal(data,2);
-                                db.accounts.find();
-                            }
-                            if(type === 'find') {
-                                assert.equal(data.length,0);
-                                db.removeAllListeners('accounts');
+        it('passes if there is already a connection',function() {
+            return expect(co(function* () {
+                return yield db.connect();
+            })).to.eventually.be.true;
+        });
+    });
 
-                                done();
-                            }
-                        });
-                        db.accounts.remove({'group.name':cool.name});
-                    });
-                });
+    describe('#disconnect',function() {
+        it('disconnects from the current database if there is a connection',function() {
+            return expect(co(function* () {
+                return yield db.disconnect();
+            })).to.eventually.be.true;
+        });
+
+        it('should fail if there is no connection',function() {
+            return expect(co(function* () {
+                return yield db.disconnect();
+            })).to.eventually.be.rejected;
+        });
+    });
+
+    describe('#initMain',function() {
+
+        before('checking for connection',function(done) {
+            return checkConnection(done);
+        });
+
+        it('creates the connection to the profiles collection',function(){
+            return expect(co(function* () {
+                return yield db.initMain();
+            })).to.eventually.be.true;
+        });
+
+        it('passes if a connection already exists',function() {
+            return expect(co(function* () {
+                return yield db.initMain();
+            })).to.eventually.be.true;
+        });
+
+        it('fails if there is no connection',function() {
+            return expect(co(function* () {
+                yield db.disconnect();
+                yield db.initMain();
+            })).to.eventually.be.rejected;
+        })
+    });
+
+    describe('#profile',function() {
+
+        before('checking for connection',function(done) {
+            return checkConnection(done);
+        });
+
+        describe('#insert',function() {
+            it('inserts a single document to the db',function() {
+                return expect(co(function* () {
+                    var result = yield db.profiles.insert(user1);
+                    if(result.result.ok) {
+                        return yield Promise.resolve(true);
+                    } else {
+                        return yield Promise.resolve(false);
+                    }
+                })).to.eventually.be.true;
+            });
+
+            it('inserts multiple documents to the db',function() {
+                return expect(co(function* () {
+                    var result = yield db.profiles.insert([user2,user3]);
+                    return yield Promise.resolve(result.result.ok && result.insertedIds.length === 2);
+                })).to.eventually.be.true;
+            });
+
+            it('fails if the username field is a duplicate',function() {
+                return expect(co(function* () {
+                    yield db.profiles.insert(user1dup);
+                })).to.eventually.be.rejected;
+            });
+
+            it('fails if the documents do not pass validation',function() {
+                return expect(co(function* () {
+                    try {
+                        var result = yield db.profiles.insert({thing:'other'});
+                        console.log('result:',result);
+                        return yield Promise.resolve(result);
+                    } catch(err) {
+                        return yield Promise.reject(err);
+                    }
+                })).to.eventually.be.rejected;
             });
         });
-    }
-    if(type === 'error') {
-        console.log(data);
-    }
+
+        describe('#find',function() {
+            it('finds documents based on a query',function() {
+                return expect(co(function* () {
+                    return yield db.profiles.find({});
+                })).to.eventually.have.length(3);
+            });
+
+            it('finds documents based on a query with options given',function() {
+                return expect(co(function* () {
+                    return yield db.profiles.find({},{limit:1});
+                })).to.eventually.have.length(1);
+            });
+
+            it('contiues if an option is invalid',function() {
+                return expect(co(function* () {
+                    return yield db.profiles.find({},{thing:2});
+                })).to.eventually.have.length(3);
+            });
+
+            it('will find all if no query is given',function() {
+                return expect(co(function* () {
+                    return yield db.profiles.find();
+                })).to.eventually.have.length(3);
+            });
+        });
+
+        describe('#update',function() {
+            it('updates a selected document with new data',function() {
+                return expect(co(function* () {
+                    yield db.profiles.update({username:'phil'},{'$set': {password:'bad'}});
+                    return yield db.profiles.find({username:'phil',password:'bad'});
+                })).to.eventually.have.length(1);
+            });
+
+            it('updates multiple documents with given data',function() {
+                return expect(co(function* () {
+                    yield db.profiles.update({salt: ''},{'$set': {salt: 'thing'}},{multi:true});
+                    return yield db.profiles.find({salt: 'thing'});
+                })).to.eventually.have.length(2);
+            });
+        });
+
+        describe('#remove',function() {
+            it('removes any document based on a query',function() {
+                return expect(co(function* () {
+                    yield db.profiles.remove({username:'phil'});
+                    return yield db.profiles.find({username:'phil'});
+                })).to.eventually.have.length(0);
+            });
+
+            it('removes all documents if no query is given',function() {
+                return expect(co(function* () {
+                    yield db.profiles.remove();
+                    return yield db.profiles.find();
+                })).to.eventually.have.length(0);
+            });
+        });
+    });
+
+    describe('#connectProfileDB',function() {
+
+        before(function(done) {
+            return co(function* () {
+                var docs = yield db.profiles.find({username:'phil'});
+                if(docs.length !== 1) {
+                    yield db.profiles.insert(user1);
+                    return yield Promise.resolve(true);
+                } else {
+                    return yield Promise.resolve(true);
+                }
+            }).then((val) => done());
+        });
+
+        it('connects the given profile to its designated db',function() {
+            return expect(co(function* () {
+                var doc = yield db.profiles.find({username:'phil'});
+                return yield db.connectProfileDB(doc[0]);
+            })).to.eventually.be.true;
+        });
+
+        it('should pass if a connection exists',function() {
+            return expect(co(function* () {
+                return yield db.connectProfileDB();
+            })).to.eventually.be.true;
+        });
+
+        it('fails if there is no connection',function() {
+            return expect(co(function* () {
+                yield db.disconnect();
+                yield db.connectProfileDB();
+            })).to.eventually.be.rejected;
+        })
+    });
+
+    describe('#initProfileDB',function() {
+
+        before(function(done) {
+            return checkConnection(done);
+        });
+
+        it('initializes the accounts collection for the connected profile',function() {
+            return expect(co(function* () {
+                var doc = yield db.profiles.find({username:'phil'});
+                yield db.connectProfileDB(doc[0]);
+                return yield db.initProfileDB();
+            })).to.eventually.be.true;
+        });
+
+        it('passes if it has already been initialized',function() {
+            return expect(co(function* () {
+                return yield db.initProfileDB();
+            })).to.eventually.be.true;
+        });
+
+        it('fails if there is no connection',function() {
+            return expect(co(function* () {
+                yield db.disconnect();
+                yield db.initProfileDB();
+            })).to.eventually.be.rejected;
+        });
+    });
+
+    describe('#disconnectProfileDB',function() {
+        before(function(done) {
+            return checkConnection(done);
+        });
+
+        it('disconnects from the current profile db',function() {
+            return expect(co(function* () {
+                var doc = yield db.profiles.find({username:'phil'});
+                yield db.connectProfileDB(doc[0]);
+                return yield db.disconnectProfileDB();
+            })).to.eventually.be.true;
+        });
+
+        it('fails if there is no connection',function() {
+            return expect(co(function* () {
+                yield db.disconnectProfileDB();
+            })).to.eventually.be.rejected;
+        });
+    });
+
 });
