@@ -1,7 +1,0 @@
-{
-    "presets": ["react"],
-    "plugins": [],
-    "only": [
-        "./build/*"
-    ]
-}
