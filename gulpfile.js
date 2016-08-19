@@ -13,13 +13,13 @@ const watch = require('gulp-watch');
 
 const paths = {
     react: {
-        src: './react/build/**/*.js',
+        src: './build/react/**/*.js',
         out: './resources/reactjs'
     },
     less: {
-        src: './less/main.less',
+        src: './build/less/main.less',
         out: './resources/style',
-        imp: './less/imports/**/*.less'
+        imp: './build/less/imports/**/*.less'
     }
 }
 
