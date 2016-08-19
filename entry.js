@@ -1,70 +1,104 @@
-const util = require('util');
-
 const electron = require('electron');
-// Module to control application life.
+const co = require('co');
+const events = require('events');
+
+const mongodEXE = require('./lib/db/mongodEXE.js');
+const DBMinerva = require('./lib/db/DBMinerva.js');
+const ProfileMan = require('./lib/ProfileMan.js');
+const LoginWin = require('./lib/LoginWin.js');
+const logging = require('./lib/log.js');
+
+const settings = require('./settings.json');
+
 const {app} = electron;
-// Module to create native browser window.
 const {BrowserWindow} = electron;
 
-require('./lib/ProtoExtend.js');
+const logger = logging.logger('app');
 
-const manager = require('./lib/ProfileMan/index.js');
+const EE = new events.EventEmitter();
 
-const IPCEvents = require('./lib/ipcMain_events.js');
+const mongod = new mongodEXE(settings);
+const db = new DBMinerva();
+const manager = new ProfileMan(db);
+const login = new LoginWin(manager);
+//const main = new MainWin(manager,db);
 
-manager.on('manager-loaded',() => {
-    console.log("\n-----ProfileMan loaded-----\n");
-});
-
-manager.loadManager();
-
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-let win;
-
-function createWindow() {
-    console.log('\ncreating main window\n');
-    // Create the browser window.
-    win = new BrowserWindow({width: 800, height: 600});
-
-    // and load the index.html of the app.
-    win.loadURL(`file://`+__dirname+`/resources/main.html`);
-
-    IPCEvents(manager,win.webContents);
-
-    // Open the DevTools.
-    win.webContents.openDevTools();
-
-    // Emitted when the window is closed.
-    win.on('closed', () => {
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
-        win = null;
-    });
+var ready = {
+    db: false,
+    app: false,
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', () => {
-    console.log('\n-----app ready-----\n');
-    createWindow();
+var quiting_app = false;
+
+EE.on('ready',() => {
+    logger('checking ready status')
+    if(ready.db && ready.app) {
+        logger('loading login window');
+        login.show();
+    }
 });
 
-// Quit when all windows are closed.
-app.on('window-all-closed', () => {
-    // On macOS it is common for applications and their menu bar
-    // to stay active until the user quits explicitly with Cmd + Q
-    if (process.platform !== 'darwin') {
+mongod.on('ready',() => {
+    logger('mongod is ready');
+    co(function* () {
+        var connected = yield db.connect(`${settings.local.ip}:${settings.local.port}`);
+        var init = yield db.initMain();
+        if(connected && init) {
+            ready.db = true;
+            EE.emit('ready');
+        }
+    });
+});
+
+mongod.on('error',() => {
+    logger('error from mongod process');
+});
+
+mongod.on('closing',(status) => {
+    if(quiting_app) {
         app.quit();
     }
 });
 
-app.on('activate', () => {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (win === null) {
-        createWindow();
+mongod.on('killed',() => {
+    if(quiting_app) {
+        app.quit();
     }
 });
+
+login.on('logged-in',() => {
+    logger('valid login, opening main window');
+});
+
+app.on('ready',() => {
+    logger('app is ready');
+    login.create();
+    ready.app = true;
+    EE.emit('ready');
+});
+
+app.on('will-quit',(event) => {
+    quiting_app = true;
+    if(mongod.isRunning()) {
+        event.preventDefault();
+        co(function* () {
+            try {
+                let result = yield db.sendAdminCmd({shutdown:1});
+                if(result) {
+                    yield db.disconnect();
+                }
+            } catch(err) {
+                logger('error when quiting app');
+            }
+        });
+    }
+});
+
+app.on('quit',() => {
+    logger('app is quitting');
+    logging.close();
+});
+
+mongod.makeConfig();
+mongod.init();
+mongod.start();
