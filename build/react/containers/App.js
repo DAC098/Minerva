@@ -1,24 +1,22 @@
 const React = require('react');
 const {ipcRenderer} = require('electron');
 
-const Login = require('./components/Login.js');
-const Home = require('./components/Home.js');
+const SideBar = require('../components/SideBar.js');
+const ViewList = require('../components/ViewList.js');
+const ViewAccount = require('../components/ViewAccount.js');
+const Header = require('../components/Header.js');
 
 const App = React.createClass({
-    getInitialState: function() {
-        return {
-            good_login: false
-        }
-    },
-    setLogin: function(value) {
-        console.log("value recieved for login:",value);
-        this.setState({
-            good_login: value
-        });
-    },
+
     render: function() {
-        var child = this.state.good_login ? <Home loginState={this.setLogin} /> : <Login loginState={this.setLogin} />;
-        return child;
+        return (
+            <section>
+                <Header />
+                <SideBar />
+                <ViewList />
+                <ViewAccount />
+            </section>
+        )
     }
 });
 

@@ -1,14 +1,14 @@
 const React = require('react');
 
-const SideBar = React.createClass({
+const ViewList = React.createClass({
 
     render: function() {
         return (
             <section>
-                <p>Side Bar</p>
+                <p>View List</p>
             </section>
         )
     }
 });
 
-module.exports = SideBar;
+module.exports = ViewList;
