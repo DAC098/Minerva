@@ -6,6 +6,7 @@ const mongodEXE = require('./lib/db/mongodEXE.js');
 const DBMinerva = require('./lib/db/DBMinerva.js');
 const ProfileMan = require('./lib/ProfileMan.js');
 const LoginWin = require('./lib/LoginWin.js');
+const MainWin = require('./lib/MainWin.js');
 const logging = require('./lib/log.js');
 
 const settings = require('./settings.json');
@@ -21,7 +22,7 @@ const mongod = new mongodEXE(settings);
 const db = new DBMinerva();
 const manager = new ProfileMan(db);
 const login = new LoginWin(manager);
-//const main = new MainWin(manager,db);
+const main = new MainWin(manager,db);
 
 var ready = {
     db: false,
@@ -68,11 +69,36 @@ mongod.on('killed',() => {
 
 login.on('logged-in',() => {
     logger('valid login, opening main window');
+    login.hide();
+    main.show();
+});
+
+login.on('closed',() => {
+    logger('login closed');
+    if(!main.isDestroyed()) {
+        logger('closing main window');
+        main.close();
+    }
+});
+
+main.on('logged-out',() => {
+    logger('user has logged out, displaying login window');
+    main.hide();
+    login.show();
+});
+
+main.on('closed',() => {
+    logger('main closed');
+    if(!login.isDestroyed()) {
+        logger('closing login window');
+        login.close();
+    }
 });
 
 app.on('ready',() => {
     logger('app is ready');
     login.create();
+    main.create();
     ready.app = true;
     EE.emit('ready');
 });
