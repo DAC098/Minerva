@@ -4,8 +4,12 @@ const Header = React.createClass({
 
     render: function() {
         return (
-            <header>
-                <p>header</p>
+            <header className="grid row">
+                <section className="col-4"></section>
+                <section className="col-4"></section>
+                <section className="col-4">
+                    <button onClick={this.props.viewForm}>View Form</button>
+                </section>
             </header>
         )
     }

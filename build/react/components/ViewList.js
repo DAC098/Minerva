@@ -4,7 +4,7 @@ const ViewList = React.createClass({
 
     render: function() {
         return (
-            <section>
+            <section className="col-10">
                 <p>View List</p>
             </section>
         )

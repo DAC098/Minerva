@@ -4,7 +4,7 @@ const SideBar = React.createClass({
 
     render: function() {
         return (
-            <section>
+            <section className="col-2">
                 <p>Side Bar</p>
             </section>
         )

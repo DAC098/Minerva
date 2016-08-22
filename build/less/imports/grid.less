@@ -1,7 +1,7 @@
 .generate-columns(@c,@i:1) when (@i =< @c) {
     .col-@{i} {
         position: relative;
-        display: table-cell;
+        display: inline-block;
         width: (@i * 100% / @c);
     }
 
@@ -10,7 +10,7 @@
 
 .grid {
     position: relative;
-    display: table;
+    display: block;
     width: 100%;
 
     &.col-*,&.row {
@@ -20,10 +20,11 @@
     &.parent-h {
         height: 100%;
     }
+
     .generate-columns(12);
 
     & .row {
-        display: table-row;
+        display: block;
         width: 100%;
     }
 }

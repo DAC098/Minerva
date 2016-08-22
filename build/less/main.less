@@ -20,17 +20,23 @@ aside {
 
 main {
     width: 100%;
-    height: ~"calc(100vh - 64px)";
+    height: inherit;
     background-color: @color-gray500;
+}
+
+#render {
+    height: inherit;
+    width: 100%;
 }
 
 #manager-form {
     position: fixed;
-    right: 100%;
-    width: inherit;
+    left: 100%;
+    transition: 200ms;
+    background-color: @color-gray700;
 
     &.active {
-        right: auto;
+        left: auto;
     }
 }
 

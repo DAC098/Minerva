@@ -13,6 +13,8 @@ const App = React.createClass({
             query: {},
             accounts: [],
             emails: [],
+            view_form: false,
+            doc: {},
         }
     },
     componentDidMount: function() {
@@ -44,16 +46,21 @@ const App = React.createClass({
     logout: function() {
 
     },
-
+    viewForm: function() {
+        console.log('changing form view state');
+        this.setState({
+            view_form: !this.state.view_form
+        });
+    },
 
     render: function() {
         return (
-            <section>
-                <Header />
+            <main className="grid">
+                <Header viewForm={this.viewForm} />
                 <SideBar tags={this.state.tags} />
                 <ViewList accounts={this.state.accounts} />
-                <ViewAccount />
-            </section>
+                <ViewAccount active={this.state.view_form} doc={this.state.doc} />
+            </main>
         )
     }
 });
